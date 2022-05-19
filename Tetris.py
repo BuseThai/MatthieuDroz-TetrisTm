@@ -6,31 +6,10 @@ class TetrisGame:
     def __init__(self):
         self.start = True
         self.stop = False
-        self.grid = [
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0]
-        ]
         self.case_x = 10
         self.case_y = 20
-        self.case_size = 40
+        self.case_size = 30
+        self.grid= [[0]*self.case_x for i in range(self.case_y)]
         pygame.init()
         self.clock = pygame.time.Clock()
         self.falltime = 0
@@ -61,6 +40,8 @@ class TetrisGame:
                         self.FigLeft()
                     if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                         self.FigRight()
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        self.RotateFig()
                     
                     if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         if self.speedFig == False:
@@ -109,7 +90,15 @@ class TetrisGame:
                 indx=indx+1
             indy=indy+1
             indx=0
-    
+
+
+    def RotateFig(self):
+        self.cleanFigGrid()
+        self.fallfig.rotate()
+        self.convertFigGrid()
+        self.render()
+
+
     def FigRight(self):
         if self.iscolideRight() == True:
             pass
