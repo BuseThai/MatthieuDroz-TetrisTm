@@ -1,3 +1,4 @@
+from re import X
 import pygame
 import Tetriminos
 import numpy as np
@@ -21,8 +22,13 @@ class TetrisGame:
         self.fallspeed = 0.20
         self.speedFig = False
         self.fallfig = None
-
+        self.score = 0
         self.rowclear=0
+
+
+        if(self.ai==True):
+            self.fallspeed=0.01
+
 
         self.screen =pygame.display.set_mode((self.case_x*self.case_size,self.case_y*self.case_size))
         self.intFig()
@@ -67,7 +73,8 @@ class TetrisGame:
                     self.start = False
 
             if self.stop== True:
-                print("you loose")
+                print("you loose", self.score)
+
                 self.start = False
 
             pygame.display.update()
@@ -81,11 +88,16 @@ class TetrisGame:
 
 
     def runAI(self):
+        if(self.ai==False):
+            return
         Mscore = 999999
         rotopt = 0
         popt = 0
         holeopt=0
         yinit= self.fallfig.y
+        contopt=0
+        pxopt=[]
+        pyopt=[]
         self.cleanFigGrid()
         for rot in range(0,4):
             self.fallfig.rot=rot
@@ -95,34 +107,48 @@ class TetrisGame:
                 while True:
                     if(self.iscolideDown()):
                         hole=0
-                        indx=0
-                        indy=0
-                        for col in self.fallfig.getFig():
-                            for row in col:
-                                if(self.fallfig.getFig()[indy][indx]!=0):
-                                    if((self.fallfig.y+indy+1)<self.case_y):
-                                        if(self.grid[self.fallfig.y+indy+1][self.fallfig.x+indx]==0):
-                                            hole=hole+1
-                                indx=indx+1
-                            indx=0
-                            indy=indy+1
-                
+                        cont=0
+                        px=[]
+                        py=[]
+                        
+                        
+                        for Rcase in range(0,len(self.fallfig.getFig())):
+                             for i in range(0,len(self.fallfig.getFig()[0])):
+                                if self.fallfig.getFig()[Rcase][i] !=0:
+                                    if(self.fallfig.y+Rcase+1==self.case_y):
+                                        continue
+                                    if(len(self.fallfig.getFig()) != Rcase+1):
+                                        if(self.fallfig.getFig()[Rcase+1][i] != 0):
+                                            continue
+                                    if(self.grid[self.fallfig.y+Rcase+1][p+i]==0):
+                                        hole=hole+1
+                                    px.append(p+i)
+                                    py.append(self.fallfig.y+Rcase)
+                                        
+                               
+                        
+                        
                         if(Mscore>(20-self.fallfig.y)+hole):
-                            Mscore=20-self.fallfig.y
+                            Mscore=20-self.fallfig.y+hole
                             rotopt = rot
                             popt = p
                             holeopt=hole
+                            yopt=self.fallfig.y
+                            contopt=cont
+                            pxopt=px
+                            pyopt=py
                         break
                     self.fallfig.y=self.fallfig.y+1
                 
 
-        print(holeopt)          
+         
+                
         self.fallfig.rot=rotopt
         self.fallfig.x = popt
         self.fallfig.y = yinit
         self.convertFigGrid()
         self.render()
-
+        
 
         
         
@@ -283,6 +309,7 @@ class TetrisGame:
             if fc==0:
               line=indy+self.fallfig.y
               self.clearline(line)
+              self.score=self.score+1
 
                 
             indy=indy+1
