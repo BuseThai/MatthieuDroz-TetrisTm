@@ -1,9 +1,14 @@
 import pygame
 import Tetriminos
 import numpy as np
+import threading
+import time
+
+
 
 class TetrisGame:
-    def __init__(self):
+    def __init__(self,ai):
+        self.ai = ai
         self.start = True
         self.stop = False
         self.case_x = 10
@@ -23,6 +28,13 @@ class TetrisGame:
         self.intFig()
         self.convertFigGrid()
         self.render()
+
+        self.runAI()
+
+         # x = threading.Thread(target=self.runAI)
+        # x.start()
+
+        
 
         while self.start:
             
@@ -60,6 +72,65 @@ class TetrisGame:
 
             pygame.display.update()
             self.clock.tick(25)
+
+
+
+
+
+
+
+
+    def runAI(self):
+        Mscore = 999999
+        rotopt = 0
+        popt = 0
+        holeopt=0
+        yinit= self.fallfig.y
+        self.cleanFigGrid()
+        for rot in range(0,4):
+            self.fallfig.rot=rot
+            for p in range(0,self.case_x-len(self.fallfig.getFig()[0])+1): 
+                self.fallfig.x = p
+                self.fallfig.y = 0
+                while True:
+                    if(self.iscolideDown()):
+                        hole=0
+                        indx=0
+                        indy=0
+                        for col in self.fallfig.getFig():
+                            for row in col:
+                                if(self.fallfig.getFig()[indy][indx]!=0):
+                                    if((self.fallfig.y+indy+1)<self.case_y):
+                                        if(self.grid[self.fallfig.y+indy+1][self.fallfig.x+indx]==0):
+                                            hole=hole+1
+                                indx=indx+1
+                            indx=0
+                            indy=indy+1
+                
+                        if(Mscore>(20-self.fallfig.y)+hole):
+                            Mscore=20-self.fallfig.y
+                            rotopt = rot
+                            popt = p
+                            holeopt=hole
+                        break
+                    self.fallfig.y=self.fallfig.y+1
+                
+
+        print(holeopt)          
+        self.fallfig.rot=rotopt
+        self.fallfig.x = popt
+        self.fallfig.y = yinit
+        self.convertFigGrid()
+        self.render()
+
+
+        
+        
+
+
+
+
+
 
 
     def render(self):
@@ -193,7 +264,7 @@ class TetrisGame:
             else:
                 self.convertFigGrid()
                 self.render()
-           
+            self.runAI()
         else:
             self.cleanFigGrid()
             self.fallfig.y=self.fallfig.y+1
@@ -293,5 +364,5 @@ class TetrisGame:
         self.fallfig = Tetriminos.Tetrimino(4,0)
         
 
-TetrisGame()
+TetrisGame(True)
 pygame.quit()
