@@ -128,4 +128,5 @@ GATetris(npopulation=10,nfitness=10,nparams=5,ngeneration=5).run()
 #perfect ??
 #print(Tetris.TetrisGame(ai=True,ForceUI=True,wltop=0.760666,wlbot=0.760666,wb=0.184483,wh=0.35663,wgh=0.510066).run())
 
-
+#bad(328) 0.54254, 0.24565, 0.87891, 0.25455, 0.09091
+#good(15156) 0.7398, 0.17577, 0.1646, 0.27824, 0.705
