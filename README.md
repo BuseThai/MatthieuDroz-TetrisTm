@@ -17,5 +17,6 @@ v1.0.8:
   
 TO DO LIST:
   - next pieces parametre
+  - ameliorer le GA
   - server python + interface graphique web
   - rapport écrit
