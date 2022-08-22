@@ -7,78 +7,153 @@ import time
 
 
 
+stat=0
+nbstat=0
+
+
+
+
 class TetrisGame:
-    def __init__(self,ai):
+    def __init__(self,ai=False,ForceUI=False,wltop=1,wlbot=1,wb=1,wh=1,wgh=1):
         self.ai = ai
+        self.forceui = ForceUI
+        self.weightlinetop = wltop
+        self.weightlinebottom = wlbot
+        self.weightbump = wb
+        self.weighthole = wh
+        self.weightgheight =wgh
+        self.params = 3
         self.start = True
         self.stop = False
         self.case_x = 10
-        self.case_y = 20
-        self.case_size = 30
+        self.case_y = 22
+        self.case_size = 40
         self.grid= [[0]*self.case_x for i in range(self.case_y)]
-        pygame.init()
-        self.clock = pygame.time.Clock()
+        self.clock = 0
         self.falltime = 0
-        self.fallspeed = 0.20
+        self.fallspeed = 0.2
         self.speedFig = False
         self.fallfig = None
         self.score = 0
         self.rowclear=0
+        self.nextpiece = Tetriminos.Tetrimino(4,0)
 
 
-        if(self.ai==True):
-            self.fallspeed=0.01
+
+    def run(self):
+        if self.ai==True and self.forceui==False:
+            pass
 
 
-        self.screen =pygame.display.set_mode((self.case_x*self.case_size,self.case_y*self.case_size))
+        else:
+            pygame.init()
+            self.clock = pygame.time.Clock()
+            self.screen =pygame.display.set_mode((self.case_x*self.case_size,self.case_y*self.case_size))
+
+
         self.intFig()
         self.convertFigGrid()
         self.render()
-
         self.runAI()
 
          # x = threading.Thread(target=self.runAI)
         # x.start()
+        if self.ai == True:
+            self.loopai()
+        else:
+            self.loopplayer()
+        return self.score
 
-        
 
-        while self.start:
+
+
+    def loopai(self):
             
-            self.falltime+=1
-            
+            self.fallspeed=0.002
+            while self.stop==False:
+                self.falltime+=1
 
-            
-            if self.falltime/25 >self.fallspeed:
-                self.gravityFig()
-                self.falltime = 0
-                
-                
-
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                 if self.speedFig == False:
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                        self.FigLeft()
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        self.FigRight()
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
-                        self.RotateFig()
+                if self.forceui==True and self.falltime/1000 >self.fallspeed:  
+                        self.falltime = 0
+                        self.gravityFig()
+                        pygame.display.update()
                     
-                    if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                else:
+                    self.gravityFig()
+
+                if self.forceui==True :
+                    self.clock.tick(1000)
+
+
+
+
+
+
+
+
+    def loopplayer(self):
+            while self.start:
+                
+                self.falltime+=1
+                
+
+                
+                if self.falltime/60 >self.fallspeed:
+                    self.gravityFig()
+                    self.falltime = 0
+                    
+                    
+
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
                         if self.speedFig == False:
-                            self.fallspeed = self.fallspeed/6
-                            self.speedFig = True
+                            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                                self.FigLeft()
+                            if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                                self.FigRight()
+                            if event.key == pygame.K_UP or event.key == pygame.K_w:
+                                self.RotateFig()
+                        
+                        if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                            if self.speedFig == False:
+                                self.fallspeed = self.fallspeed/6
+                                
 
-                if event.type == pygame.QUIT:
+                                self.cleanFigGrid()
+                                print("------------------------------")
+                                print("Holes create: ",self.getHoleCreate())
+                                print("Lines clear: ",self.getLineClear())
+                                print("Bumpiness: ",self.getBumpiness())
+                                print("GlobalHeight: ",self.globalheight)
+                                print("------------------------------")
+
+                                print(self.getParams())
+                                self.convertFigGrid()
+                                self.render()
+
+
+                                self.speedFig = True
+
+                    if event.type == pygame.QUIT:
+                        self.start = False
+
+                if self.stop== True:
+                    
+
+                    
+                    
+
                     self.start = False
+                    global stat 
+                    global nbstat
+                    nbstat=nbstat+1
+                    stat=stat+self.score
 
-            if self.stop== True:
-                print("you loose", self.score)
+                    print("avrage score", stat/nbstat)
 
-                self.start = False
 
-            pygame.display.update()
-            self.clock.tick(25)
+                pygame.display.update()
+                self.clock.tick(60)
 
 
 
@@ -99,92 +174,270 @@ class TetrisGame:
         pxopt=[]
         pyopt=[]
         self.cleanFigGrid()
+
         for rot in range(0,4):
             self.fallfig.rot=rot
             for p in range(0,self.case_x-len(self.fallfig.getFig()[0])+1): 
                 self.fallfig.x = p
-                self.fallfig.y = 0
-                while True:
-                    if(self.iscolideDown()):
-                        hole=0
-                        cont=0
-                        px=[]
-                        py=[]
-                        
-                        
-                        for Rcase in range(0,len(self.fallfig.getFig())):
-                             for i in range(0,len(self.fallfig.getFig()[0])):
-                                if self.fallfig.getFig()[Rcase][i] !=0:
-                                    if(self.fallfig.y+Rcase+1==self.case_y):
-                                        continue
-                                    if(len(self.fallfig.getFig()) != Rcase+1):
-                                        if(self.fallfig.getFig()[Rcase+1][i] != 0):
-                                            continue
-                                    if(self.grid[self.fallfig.y+Rcase+1][p+i]==0):
-                                        hole=hole+1
-                                    px.append(p+i)
-                                    py.append(self.fallfig.y+Rcase)
-                                        
-                               
-                        
-                        
-                        if(Mscore>(20-self.fallfig.y)+hole):
-                            Mscore=20-self.fallfig.y+hole
-                            rotopt = rot
-                            popt = p
-                            holeopt=hole
-                            yopt=self.fallfig.y
-                            contopt=cont
-                            pxopt=px
-                            pyopt=py
-                        break
-                    self.fallfig.y=self.fallfig.y+1
-                
 
-         
-                
+                params = self.getParams()
+                bump=params[2]*self.weightbump
+                hole=params[0]*self.weighthole  
+
+                line=params[1]*self.remap(params[3],0,(self.case_y-1),self.weightlinetop,self.weightlinebottom)        
+                gheight=params[4]*self.weightgheight
+                if(Mscore>hole+gheight+bump-line):
+                    Mscore=hole+gheight+bump-line
+                    rotopt = rot
+                    popt = p
+                                
         self.fallfig.rot=rotopt
         self.fallfig.x = popt
         self.fallfig.y = yinit
         self.convertFigGrid()
         self.render()
         
+    def remap(self,x, in_min, in_max, out_min, out_max):
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+        
+
+    def getParams(self):
+        yinit = self.fallfig.y
+        params=[]
+        holes=0
+        lines=0
+        bump=0
+        maxheight=0
+        globalheight=0
+        p = self.fallfig.x
+
+
+        fmh=False
+        for row in self.grid:
+            for pc in row:
+                if pc!=0:
+                    fmh=True
+                    break
+            if fmh==True:
+                fmh=False
+                break
+
+            maxheight=maxheight+1
+        
+        bumpmap=[]
+
+        while 1:
+            if(self.iscolideDown()):
+                hole=0
+                cont=0
+                px=[]
+                py=[]         
+                for Rcase in range(0,len(self.fallfig.getFig())):
+                    for i in range(0,len(self.fallfig.getFig()[0])):
+                        if self.fallfig.getFig()[Rcase][i] !=0:
+                            if(self.fallfig.y+Rcase+1==self.case_y):
+                                continue
+                            if(len(self.fallfig.getFig()) != Rcase+1):
+                                if(self.fallfig.getFig()[Rcase+1][i] != 0):
+                                    continue
+                            if(self.grid[self.fallfig.y+Rcase+1][p+i]==0):
+                                it=0
+                                while True:
+                                    try:
+                                        if(self.grid[self.fallfig.y+Rcase+1+it][p+i]==0):
+                                            holes=holes+1
+                                        else:
+                                            break
+                                    except:
+                                        break
+                                    it=it+1
+                            px.append(p+i)
+                            py.append(self.fallfig.y+Rcase)
+                
+                indy=0
+                for row in self.fallfig.getFig():
+                    fc=0
+                    for cp in row:
+                        if cp!=0:
+                            fc=fc+1
+                    for x in range(0,self.case_x):
+                        if self.grid[indy+self.fallfig.y][x] ==0:
+                            fc=fc-1
+                    if fc==0:
+                        lines=lines+1         
+                    indy=indy+1
+
+                self.convertFigGrid()
+                bumpmap=[0]*self.case_x
+                for x in range(0,self.case_x):
+                    for column in range(0,self.case_y):
+                        if self.grid[column][x]!=0:
+                            bumpmap[x]=self.case_y-column
+                            break
+                globalheight=sum(bumpmap)                      
+                self.cleanFigGrid() 
+
+                
+                break
+            self.fallfig.y=self.fallfig.y+1
+        self.fallfig.y=yinit
+
+        for b in range(0,len(bumpmap)-1):
+           bump+= abs(bumpmap[b]-bumpmap[b+1])
+
+
+        params=[holes,lines,bump,maxheight,globalheight]
+
+        return params
+
+
+    def getHoleCreate(self):
+        holes=0
+        p = self.fallfig.x
+        yinit = self.fallfig.y
+        
+        while True:
+            if(self.iscolideDown()):
+                hole=0
+                cont=0
+                px=[]
+                py=[]         
+                for Rcase in range(0,len(self.fallfig.getFig())):
+                    for i in range(0,len(self.fallfig.getFig()[0])):
+                        if self.fallfig.getFig()[Rcase][i] !=0:
+                            if(self.fallfig.y+Rcase+1==self.case_y):
+                                continue
+                            if(len(self.fallfig.getFig()) != Rcase+1):
+                                if(self.fallfig.getFig()[Rcase+1][i] != 0):
+                                    continue
+                            if(self.grid[self.fallfig.y+Rcase+1][p+i]==0):
+                                it=0
+                                while True:
+                                    try:
+                                        if(self.grid[self.fallfig.y+Rcase+1+it][p+i]==0):
+                                            holes=holes+1
+                                        else:
+                                            break
+                                    except:
+                                        break
+                                    it=it+1
+                            px.append(p+i)
+                            py.append(self.fallfig.y+Rcase)
+                break
+            self.fallfig.y=self.fallfig.y+1
+                
+        self.fallfig.y=yinit
+      
+        return holes
+
+    def getLineClear(self):
+        lines=0
+        yinit = self.fallfig.y
+
+        
+        while True: 
+            if(self.iscolideDown()):
+                indy=0
+                for row in self.fallfig.getFig():
+                    fc=0
+                    for cp in row:
+                        if cp!=0:
+                            fc=fc+1
+                    for x in range(0,self.case_x):
+                        if self.grid[indy+self.fallfig.y][x] ==0:
+                            fc=fc-1
+                    if fc==0:
+                        lines=lines+1
+                      
+                    indy=indy+1
+                break
+            
+            self.fallfig.y=self.fallfig.y+1
+
+
+        self.fallfig.y=yinit
+        
+        return lines
+
+
+    def getBumpiness(self):
+        yinit = self.fallfig.y
+        bump=0
+        maxheight=0
+        theight=0
 
         
         
+        fmh=False
+        for row in self.grid:
+            for pc in row:
+                if pc!=0:
+                    fmh=True
+                    break
+            if fmh==True:
+                fmh=False
+                break
+
+            maxheight=maxheight+1
+        
+        
+        self.maxheight = maxheight
+        bumpmap=[]
+        while True: 
+            if(self.iscolideDown()):
+                self.convertFigGrid()
+
+                bumpmap=[0]*self.case_x
+                for x in range(0,self.case_x):
+                    for column in range(0,self.case_y):
+                        if self.grid[column][x]!=0:
+                            bumpmap[x]=self.case_y-column
+                            break
+                self.globalheight=sum(bumpmap)                      
+                
+
+                self.cleanFigGrid() 
+                break
+            self.fallfig.y=self.fallfig.y+1
+
+        #print("figure height :",theight)
+        
+        for b in range(0,len(bumpmap)-1):
+           bump+= abs(bumpmap[b]-bumpmap[b+1])
 
 
-
-
-
+        self.fallfig.y=yinit
+        
+        return bump
 
 
     def render(self):
-        indx=0
-        indy=0
-        for grid in self.grid:
-            for gridcase in grid:
-                
-                if gridcase==0:
-                    pygame.draw.rect(self.screen,(0,0,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==1:
-                    pygame.draw.rect(self.screen,(51,255,255),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==2:
-                    pygame.draw.rect(self.screen,(255,102,255),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==3:
-                    pygame.draw.rect(self.screen,(255,255,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==4:
-                    pygame.draw.rect(self.screen,(204,0,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==5:
-                    pygame.draw.rect(self.screen,(153,255,76),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==6:
-                    pygame.draw.rect(self.screen,(0,204,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                elif gridcase==7:
-                    pygame.draw.rect(self.screen,(0,0,153),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
-                       
-                indx=indx+1
-            indy=indy+1
+        if self.ai==False or self.forceui==True:
             indx=0
+            indy=0
+            for grid in self.grid:
+                for gridcase in grid:
+                    
+                    if gridcase==0:
+                        pygame.draw.rect(self.screen,(0,0,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==1:
+                        pygame.draw.rect(self.screen,(51,255,255),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==2:
+                        pygame.draw.rect(self.screen,(255,102,255),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==3:
+                        pygame.draw.rect(self.screen,(255,255,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==4:
+                        pygame.draw.rect(self.screen,(204,0,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==5:
+                        pygame.draw.rect(self.screen,(153,255,76),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==6:
+                        pygame.draw.rect(self.screen,(0,204,0),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                    elif gridcase==7:
+                        pygame.draw.rect(self.screen,(0,0,153),[indx*self.case_size,indy*self.case_size,self.case_size,self.case_size])
+                        
+                    indx=indx+1
+                indy=indy+1
+                indx=0
     
     
 
@@ -285,6 +538,7 @@ class TetrisGame:
                 self.fallspeed = self.fallspeed*6
                 self.speedFig = False
 
+            
             if self.loosecheck() == True:
                self.stop=True
             else:
@@ -307,10 +561,10 @@ class TetrisGame:
                 if self.grid[indy+self.fallfig.y][x] ==0:
                     fc=1
             if fc==0:
-              line=indy+self.fallfig.y
-              self.clearline(line)
-              self.score=self.score+1
-
+                line=indy+self.fallfig.y
+                self.clearline(line)
+                self.score=self.score+1
+                
                 
             indy=indy+1
         
@@ -388,8 +642,7 @@ class TetrisGame:
 
 
     def intFig(self):
-        self.fallfig = Tetriminos.Tetrimino(4,0)
+        self.fallfig = self.nextpiece
+        self.nextpiece = Tetriminos.Tetrimino(4,0)
         
-
-TetrisGame(True)
-pygame.quit()
+        

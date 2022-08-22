@@ -95,11 +95,16 @@ class Tetrimino:
     def __init__(self,x,y):
         self.x = x
         self.y = y
-        self.fig = self.rndfig()
+        self.vfig = self.rndfig()
+        self.fig = figtype[self.vfig]
         self.rot = 0
+        if self.vfig == 0 or self.vfig==2:
+            self.rot=1
+        
+        
     
     def rndfig(self):
-        return figtype[random.randint(0,len(figtype)-1)]
+        return random.randint(0,len(figtype)-1)
 
     def getFig(self):
         return self.fig[self.rot]
