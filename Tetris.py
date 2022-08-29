@@ -1,8 +1,8 @@
+from http.client import OK
 from re import X
 import pygame
 import Tetriminos
 import numpy as np
-import threading
 import time
 
 
@@ -37,7 +37,7 @@ class TetrisGame:
         self.score = 0
         self.rowclear=0
         self.nextpiece = Tetriminos.Tetrimino(4,0)
-
+        self.avr = [0,0]
 
 
     def run(self):
@@ -52,7 +52,7 @@ class TetrisGame:
 
 
         self.intFig()
-        self.convertFigGrid()
+        self.convertFigGrid(self.fallfig)
         self.render()
         self.runAI()
 
@@ -76,12 +76,26 @@ class TetrisGame:
                 if self.forceui==True and self.falltime/1000 >self.fallspeed:  
                         self.falltime = 0
                         self.gravityFig()
-                        pygame.display.update()
+                        
                     
-                else:
+                if self.forceui==False:
                     self.gravityFig()
 
+
                 if self.forceui==True :
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            self.start = False
+                        if event.type == pygame.KEYDOWN:
+
+                            if event.key == pygame.K_1:
+                                self.fallspeed=0.1
+                            if event.key == pygame.K_2:
+                                self.fallspeed=0.01
+                            if event.key == pygame.K_3:
+                                self.fallspeed=0
+
+                    pygame.display.update()
                     self.clock.tick(1000)
 
 
@@ -119,7 +133,7 @@ class TetrisGame:
                                 self.fallspeed = self.fallspeed/6
                                 
 
-                                self.cleanFigGrid()
+                                self.cleanFigGrid(self.fallfig)
                                 print("------------------------------")
                                 print("Holes create: ",self.getHoleCreate())
                                 print("Lines clear: ",self.getLineClear())
@@ -128,7 +142,7 @@ class TetrisGame:
                                 print("------------------------------")
 
                                 print(self.getParams())
-                                self.convertFigGrid()
+                                self.convertFigGrid(self.fallfig)
                                 self.render()
 
 
@@ -169,32 +183,56 @@ class TetrisGame:
         rotopt = 0
         popt = 0
         holeopt=0
+
         yinit= self.fallfig.y
+        ynextinit = self.nextpiece.y
+
         contopt=0
         pxopt=[]
         pyopt=[]
-        self.cleanFigGrid()
+        self.cleanFigGrid(self.fallfig)
+        
+        
+        for rotnext in range(0,4):
+            if rotnext==2 or rotnext==3:
+                        if self.nextpiece.fig==Tetriminos.I or self.nextpiece.fig==Tetriminos.O or self.nextpiece.fig==Tetriminos.S or self.nextpiece.fig==Tetriminos.Z:
+                            break
+            self.nextpiece.rot=rotnext
+            for pnext in range(0,self.case_x-len(self.nextpiece.getFig()[0])+1): 
+                self.nextpiece.x=pnext
 
-        for rot in range(0,4):
-            self.fallfig.rot=rot
-            for p in range(0,self.case_x-len(self.fallfig.getFig()[0])+1): 
-                self.fallfig.x = p
+                for rot in range(0,4):
+                    if rot==2 or rot==3:
+                        if self.fallfig.fig==Tetriminos.I or self.fallfig.fig==Tetriminos.O or self.fallfig.fig==Tetriminos.S or self.fallfig.fig==Tetriminos.Z:
+                            break
 
-                params = self.getParams()
-                bump=params[2]*self.weightbump
-                hole=params[0]*self.weighthole  
+                    self.fallfig.rot=rot
+                    for p in range(0,self.case_x-len(self.fallfig.getFig()[0])+1): 
+                        self.fallfig.x = p
 
-                line=params[1]*self.remap(params[3],0,(self.case_y-1),self.weightlinetop,self.weightlinebottom)        
-                gheight=params[4]*self.weightgheight
-                if(Mscore>hole+gheight+bump-line):
-                    Mscore=hole+gheight+bump-line
-                    rotopt = rot
-                    popt = p
-                                
+                        params = self.getParams()
+                        bump=params[2]*self.weightbump
+                        hole=params[0]*self.weighthole  
+
+                        line=params[1]*self.remap(params[3],0,(self.case_y-1),self.weightlinetop,self.weightlinebottom)        
+                        gheight=params[4]*self.weightgheight
+
+
+                        if(Mscore>hole+gheight+bump-line):
+                            Mscore=hole+gheight+bump-line
+                            rotopt = rot
+                            popt = p
+                        #triedmoves+=1
+        
+
+
+
+        self.nextpiece.y=ynextinit
+
         self.fallfig.rot=rotopt
         self.fallfig.x = popt
         self.fallfig.y = yinit
-        self.convertFigGrid()
+        self.convertFigGrid(self.fallfig)
         self.render()
         
     def remap(self,x, in_min, in_max, out_min, out_max):
@@ -203,6 +241,8 @@ class TetrisGame:
 
     def getParams(self):
         yinit = self.fallfig.y
+        ynextinit = self.nextpiece.y
+
         params=[]
         holes=0
         lines=0
@@ -210,7 +250,7 @@ class TetrisGame:
         maxheight=0
         globalheight=0
         p = self.fallfig.x
-
+        pnext= self.nextpiece.x
 
         fmh=False
         for row in self.grid:
@@ -226,68 +266,129 @@ class TetrisGame:
         
         bumpmap=[]
 
+
+        #self.iscolideDown(self.nextpiece)
         while 1:
-            if(self.iscolideDown()):
-                hole=0
-                cont=0
-                px=[]
-                py=[]         
-                for Rcase in range(0,len(self.fallfig.getFig())):
-                    for i in range(0,len(self.fallfig.getFig()[0])):
-                        if self.fallfig.getFig()[Rcase][i] !=0:
-                            if(self.fallfig.y+Rcase+1==self.case_y):
-                                continue
-                            if(len(self.fallfig.getFig()) != Rcase+1):
-                                if(self.fallfig.getFig()[Rcase+1][i] != 0):
-                                    continue
-                            if(self.grid[self.fallfig.y+Rcase+1][p+i]==0):
-                                it=0
-                                while True:
-                                    try:
-                                        if(self.grid[self.fallfig.y+Rcase+1+it][p+i]==0):
-                                            holes=holes+1
-                                        else:
-                                            break
-                                    except:
-                                        break
-                                    it=it+1
-                            px.append(p+i)
-                            py.append(self.fallfig.y+Rcase)
-                
-                indy=0
-                for row in self.fallfig.getFig():
-                    fc=0
-                    for cp in row:
-                        if cp!=0:
-                            fc=fc+1
-                    for x in range(0,self.case_x):
-                        if self.grid[indy+self.fallfig.y][x] ==0:
-                            fc=fc-1
-                    if fc==0:
-                        lines=lines+1         
-                    indy=indy+1
+            if(self.iscolideDown(self.fallfig)):
+                self.convertFigGrid(self.fallfig)
+                while 1:
+                    if(self.iscolideDown(self.nextpiece)):
+                        self.cleanFigGrid(self.fallfig)
+                        
 
-                self.convertFigGrid()
-                bumpmap=[0]*self.case_x
-                for x in range(0,self.case_x):
-                    for column in range(0,self.case_y):
-                        if self.grid[column][x]!=0:
-                            bumpmap[x]=self.case_y-column
-                            break
-                globalheight=sum(bumpmap)                      
-                self.cleanFigGrid() 
 
-                
+
+
+
+                        hole=0
+                        cont=0
+                        px=[]
+                        py=[]         
+                        for Rcase in range(0,len(self.fallfig.getFig())):
+                            for i in range(0,len(self.fallfig.getFig()[0])):
+                                if self.fallfig.getFig()[Rcase][i] !=0:
+                                    if(self.fallfig.y+Rcase+1==self.case_y):
+                                        continue
+                                    if(len(self.fallfig.getFig()) != Rcase+1):
+                                        if(self.fallfig.getFig()[Rcase+1][i] != 0):
+                                            continue
+                                    if(self.grid[self.fallfig.y+Rcase+1][p+i]==0):
+                                        it=0
+                                        while True:
+                                            try:
+                                                if(self.grid[self.fallfig.y+Rcase+1+it][p+i]==0):
+                                                    holes=holes+1
+                                                else:
+                                                    break
+                                            except:
+                                                break
+                                            it=it+1
+                                    px.append (p+i)
+                                    py.append(self.fallfig.y+Rcase)
+                        
+                        cont=0
+                        px=[]
+                        py=[]
+
+                        self.convertFigGrid(self.fallfig)         
+                        for Rcase in range(0,len(self.nextpiece.getFig())):
+                            for i in range(0,len(self.nextpiece.getFig()[0])):
+                                if self.nextpiece.getFig()[Rcase][i] !=0:
+                                    if(self.nextpiece.y+Rcase+1==self.case_y):
+                                        continue
+                                    if(len(self.nextpiece.getFig()) != Rcase+1):
+                                        if(self.nextpiece.getFig()[Rcase+1][i] != 0):
+                                            continue
+                                    if(self.grid[self.nextpiece.y+Rcase+1][pnext+i]==0):
+                                        it=0
+                                        while True:
+                                            try:
+                                                if(self.grid[self.nextpiece.y+Rcase+1+it][pnext+i]==0):
+                                                    holes=holes+1
+                                                else:
+                                                    break
+                                            except:
+                                                break
+                                            it=it+1
+                                    px.append (pnext+i)
+                                    py.append(self.nextpiece.y+Rcase)
+                        self.cleanFigGrid(self.fallfig)
+
+
+
+                        indy=0
+                        for row in self.fallfig.getFig():
+                            fc=0
+                            for cp in row:
+                                if cp!=0:
+                                    fc=fc+1
+                            for x in range(0,self.case_x):
+                                if self.grid[indy+self.fallfig.y][x] ==0:
+                                    fc=fc-1
+                            if fc==0:
+                                lines=lines+1         
+                            indy=indy+1
+
+                        indy=0
+                        for row in self.nextpiece.getFig():
+                            fc=0
+                            for cp in row:
+                                if cp!=0:
+                                    fc=fc+1
+                            for x in range(0,self.case_x):
+                                if self.grid[indy+self.nextpiece.y][x] ==0:
+                                    fc=fc-1
+                            if fc==0:
+                                lines=lines+1         
+                            indy=indy+1
+
+                        self.convertFigGrid(self.fallfig)
+                        self.convertFigGrid(self.nextpiece)
+                        bumpmap=[0]*self.case_x
+                        for x in range(0,self.case_x):
+                            for column in range(0,self.case_y):
+                                if self.grid[column][x]!=0:
+                                    bumpmap[x]=self.case_y-column
+                                    break
+                        globalheight=sum(bumpmap)                      
+                        self.cleanFigGrid(self.fallfig)
+                        self.cleanFigGrid(self.nextpiece) 
+
+                        break
+
+                    self.nextpiece.y+=1
                 break
             self.fallfig.y=self.fallfig.y+1
+
+
         self.fallfig.y=yinit
+        self.nextpiece.y=ynextinit
 
         for b in range(0,len(bumpmap)-1):
            bump+= abs(bumpmap[b]-bumpmap[b+1])
 
 
         params=[holes,lines,bump,maxheight,globalheight]
-
         return params
 
 
@@ -297,7 +398,7 @@ class TetrisGame:
         yinit = self.fallfig.y
         
         while True:
-            if(self.iscolideDown()):
+            if(self.iscolideDown(self.fallfig)):
                 hole=0
                 cont=0
                 px=[]
@@ -336,7 +437,7 @@ class TetrisGame:
 
         
         while True: 
-            if(self.iscolideDown()):
+            if(self.iscolideDown(self.fallfig)):
                 indy=0
                 for row in self.fallfig.getFig():
                     fc=0
@@ -384,8 +485,8 @@ class TetrisGame:
         self.maxheight = maxheight
         bumpmap=[]
         while True: 
-            if(self.iscolideDown()):
-                self.convertFigGrid()
+            if(self.iscolideDown(self.fallfig)):
+                self.convertFigGrid(self.fallfig)
 
                 bumpmap=[0]*self.case_x
                 for x in range(0,self.case_x):
@@ -396,7 +497,7 @@ class TetrisGame:
                 self.globalheight=sum(bumpmap)                      
                 
 
-                self.cleanFigGrid() 
+                self.cleanFigGrid(self.fallfig) 
                 break
             self.fallfig.y=self.fallfig.y+1
 
@@ -442,15 +543,15 @@ class TetrisGame:
     
 
     def RotateFig(self):
-        self.cleanFigGrid()
+        self.cleanFigGrid(self.fallfig)
         self.fallfig.rotate()
         if self.iscollideRotate() == True:
             self.fallfig.reverseRotate()
-            self.convertFigGrid()
+            self.convertFigGrid(self.fallfig)
             self.render()
             pass
         else:
-            self.convertFigGrid()
+            self.convertFigGrid(self.fallfig)
             self.render()
 
 
@@ -458,18 +559,18 @@ class TetrisGame:
         if self.iscolideRight() == True:
             pass
         else:
-            self.cleanFigGrid()
+            self.cleanFigGrid(self.fallfig)
             self.fallfig.x=self.fallfig.x+1
-            self.convertFigGrid()
+            self.convertFigGrid(self.fallfig)
             self.render()
         
     def FigLeft(self):
         if self.iscolideLeft() == True:
             pass
         else:
-            self.cleanFigGrid()
+            self.cleanFigGrid(self.fallfig)
             self.fallfig.x=self.fallfig.x-1
-            self.convertFigGrid()
+            self.convertFigGrid(self.fallfig)
             self.render()
         
     def iscolideRight(self):
@@ -502,22 +603,22 @@ class TetrisGame:
         return False
 
 
-    def iscolideDown(self):
+    def iscolideDown(self,fig):
 
         indx=0
-        for Dcase in self.fallfig.getFig()[len(self.fallfig.getFig())-1]:
+        for Dcase in fig.getFig()[len(fig.getFig())-1]:
 
             if Dcase!=0:
-                if self.fallfig.y+len(self.fallfig.getFig())==self.case_y:
+                if fig.y+len(fig.getFig())==self.case_y:
                     return True
-                if self.grid[self.fallfig.y+len(self.fallfig.getFig())][self.fallfig.x+indx]!=0:
+                if self.grid[fig.y+len(fig.getFig())][fig.x+indx]!=0:
                     return True
             else:
 
-                for i in range(1,len(self.fallfig.getFig())):
+                for i in range(1,len(fig.getFig())):
                    
-                    if self.fallfig.getFig()[len(self.fallfig.getFig())-1-i][indx]!=0:
-                        if self.grid[self.fallfig.y+len(self.fallfig.getFig())-i][self.fallfig.x+indx]!=0:
+                    if fig.getFig()[len(fig.getFig())-1-i][indx]!=0:
+                        if self.grid[fig.y+len(fig.getFig())-i][fig.x+indx]!=0:
                             return True
                         break
                         
@@ -531,7 +632,7 @@ class TetrisGame:
 
     def gravityFig(self):
         
-        if self.iscolideDown()==True:
+        if self.iscolideDown(self.fallfig)==True:
             self.newlinecheck()
             self.intFig()
             if self.speedFig == True:
@@ -542,13 +643,13 @@ class TetrisGame:
             if self.loosecheck() == True:
                self.stop=True
             else:
-                self.convertFigGrid()
+                self.convertFigGrid(self.fallfig)
                 self.render()
             self.runAI()
         else:
-            self.cleanFigGrid()
+            self.cleanFigGrid(self.fallfig)
             self.fallfig.y=self.fallfig.y+1
-            self.convertFigGrid()
+            self.convertFigGrid(self.fallfig)
             self.render()
     
 
@@ -564,6 +665,7 @@ class TetrisGame:
                 line=indy+self.fallfig.y
                 self.clearline(line)
                 self.score=self.score+1
+                print("AI SCORE:",self.score)
                 
                 
             indy=indy+1
@@ -596,15 +698,15 @@ class TetrisGame:
 
 
 
-    def cleanFigGrid(self):
-        if self.fallfig == None:
+    def cleanFigGrid(self,fig):
+        if fig == None:
             return
         indx=0
         indy=0
-        for row in self.fallfig.getFig():
+        for row in fig.getFig():
             for colum in row:
-                if self.fallfig.getFig()[indy][indx]!=0:
-                    self.grid[indy+self.fallfig.y][indx+self.fallfig.x]=0
+                if fig.getFig()[indy][indx]!=0:
+                    self.grid[indy+fig.y][indx+fig.x]=0
                 indx=indx+1
             indx=0
             indy=indy+1
@@ -627,15 +729,15 @@ class TetrisGame:
             return True
         return False
 
-    def convertFigGrid(self):
-        if self.fallfig == None:
+    def convertFigGrid(self,fig):
+        if fig == None:
             return
         indx=0
         indy=0
-        for row in self.fallfig.getFig():
+        for row in fig.getFig():
             for colum in row:
-                if self.fallfig.getFig()[indy][indx]!=0:
-                        self.grid[indy+self.fallfig.y][indx+self.fallfig.x]=self.fallfig.getFig()[indy][indx]
+                if fig.getFig()[indy][indx]!=0:
+                        self.grid[indy+fig.y][indx+fig.x]=fig.getFig()[indy][indx]
                 indx=indx+1
             indx=0
             indy=indy+1

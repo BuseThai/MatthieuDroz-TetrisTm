@@ -106,12 +106,13 @@ class GATetris:
         self.population=self.nextpopulation+complet
     
    
-GATetris(npopulation=10,nfitness=10,nparams=5,ngeneration=5).run()
+#GATetris(npopulation=10,nfitness=10,nparams=5,ngeneration=5).run()
 
 
 
 #print(Tetris.TetrisGame().run())
-#print(Tetris.TetrisGame(ai=True,ForceUI=False,wltop=0.7032,wlbot=0.56141,wb=0.27375,wh=0.39578,wgh=0.82356).run())
+print(Tetris.TetrisGame(ai=True,ForceUI=False,wltop=0.7032,wlbot=0.56141,wb=0.27375,wh=0.39578,wgh=0.82356).run())
+#print(Tetris.TetrisGame(ai=True,ForceUI=True,wltop=0.7398,wlbot=0.17577,wb=0.1646,wh=0.27824,wgh=0.705).run())
 #GArun()
 #i=0
 #print(Tetris.TetrisGame(True,True,0.67715, 0.29658, 0.20789, 0.23547, 0.60586).run())
@@ -127,6 +128,7 @@ GATetris(npopulation=10,nfitness=10,nparams=5,ngeneration=5).run()
 
 #perfect ??
 #print(Tetris.TetrisGame(ai=True,ForceUI=True,wltop=0.760666,wlbot=0.760666,wb=0.184483,wh=0.35663,wgh=0.510066).run())
+
 
 #bad(328) 0.54254, 0.24565, 0.87891, 0.25455, 0.09091
 #good(15156) 0.7398, 0.17577, 0.1646, 0.27824, 0.705
