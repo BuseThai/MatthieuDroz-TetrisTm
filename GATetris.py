@@ -119,7 +119,7 @@ class GATetris:
 
             #print("-------Wait processing-------")
             for thread in threads:
-                thread.join(timeout=30)
+                thread.join(timeout=60)
         
 
     
@@ -236,7 +236,7 @@ class GATetris:
 from multiprocessing import Process, freeze_support
 if __name__ == '__main__':
     freeze_support()
-    #GATetris(npopulation=100,nfitness=100,nparams=5,ngeneration=100,npk=False,maxmoves=-1).run()
+    #GATetris(npopulation=100,nfitness=10,nparams=5,ngeneration=100,npk=True,maxmoves=500).run()
     GATetris().resume("training.json")
 
 

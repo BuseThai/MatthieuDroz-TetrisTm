@@ -139,7 +139,10 @@ class TetrisGame:
                                 self.FigRight()
                             if event.key == pygame.K_UP or event.key == pygame.K_w:
                                 self.RotateFig()
-                        
+
+                        if event.key == pygame.K_k:
+                            while 1:
+                                pass
                         if event.key == pygame.K_DOWN or event.key == pygame.K_s:
                             if self.speedFig == False:
                                 self.fallspeed = self.fallspeed/6
@@ -222,7 +225,7 @@ class TetrisGame:
                         self.fallfig.rot=rot
                         for p in range(0,self.case_x-len(self.fallfig.getFig()[0])+1): 
                             self.fallfig.x = p
-
+                            
                             params = self.getParams()
                             bump=params[2]*self.weightbump
                             hole=params[0]*self.weighthole  
@@ -237,7 +240,7 @@ class TetrisGame:
                                 rotopt = rot
                                 popt = p
                             #triedmoves+=1
-            
+                            
         if self.npk == False:
             for rot in range(0,4):
                         if rot==2 or rot==3:
@@ -815,6 +818,7 @@ class TetrisGame:
                 line=indy+self.fallfig.y
                 self.clearline(line)
                 self.score=self.score+1
+                #print(self.score)
                 
                 
             indy=indy+1
