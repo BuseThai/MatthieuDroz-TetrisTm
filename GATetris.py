@@ -236,8 +236,8 @@ class GATetris:
 from multiprocessing import Process, freeze_support
 if __name__ == '__main__':
     freeze_support()
-    #GATetris(npopulation=100,nfitness=10,nparams=5,ngeneration=100,npk=True,maxmoves=500).run()
-    GATetris().resume("training.json")
+    GATetris(npopulation=10,nfitness=1,nparams=5,ngeneration=100,npk=False,maxmoves=10).run()
+    #GATetris().resume("training.json")
 
 
 

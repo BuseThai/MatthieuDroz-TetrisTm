@@ -250,11 +250,11 @@ const cleangrid = new Array(ycase).fill(0).map(() => new Array(xcase).fill(0));
 0.5529, 0.4939, 0.18257, 0.47463, 0.35215
 
 
-var weightbump =0.18257;
-var weighthole = 0.47463;
-var weightlinetop = 0.5529;
-var weightlinebottom = 0.4939;
-var weightgheight = 0.35215;
+var weightbump =0.23295;
+var weighthole = 0.38006;
+var weightlinetop = 0.58981;
+var weightlinebottom = 0.67119;
+var weightgheight = 0.47393;
 
 
 
