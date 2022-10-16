@@ -1,7 +1,7 @@
 # MatthieuDroz-TetrisTm
 A repository for the TM of Matthieu Droz
 
-Version 24.0.0 - 15.10.2022
+Version 40.2.0 - 15.10.2022
 
 Requirement: 
 - pygame library
