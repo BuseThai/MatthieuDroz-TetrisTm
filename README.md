@@ -8,4 +8,4 @@ Requirement:
 - numpy library
 - flask library (only for the web server)
 
-Server web link : http://tetris.matthieudroz.com/
+Server web link : http://tetris.matthieudroz.com
