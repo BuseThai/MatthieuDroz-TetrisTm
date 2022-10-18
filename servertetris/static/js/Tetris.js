@@ -243,12 +243,11 @@ var aivplayer = false;
 
 const cleangrid = new Array(ycase).fill(0).map(() => new Array(xcase).fill(0));
 
-// wltop=1,wlbot=0.760666,wb=0.184483,wh=0.35663,wgh=0.510066
-0.58981, 0.67119, 0.23295, 0.38006, 0.47393
-0.5907, 0.5328, 0.20009, 0.46768, 0.42088
 
-0.5529, 0.4939, 0.18257, 0.47463, 0.35215
+// params 0.58981, 0.67119, 0.23295, 0.38006, 0.47393
 
+
+//0.12642, 0.69994, 0.37852, 0.94981, 0.7997
 
 var weightbump =0.23295;
 var weighthole = 0.38006;
@@ -371,11 +370,11 @@ if(aiharddrop) {
 
 
 function updateW(){
-   weightbump= document.getElementById("w1in").value 
-    weighthole=document.getElementById("w2in").value 
-    weightgheight=document.getElementById("w3in").value 
-    weightlinetop=document.getElementById("w4in").value 
-    weightlinebottom=document.getElementById("w5in").value 
+   weightbump= parseFloat(document.getElementById("w1in").value)
+    weighthole=parseFloat(document.getElementById("w2in").value) 
+    weightgheight=parseFloat(document.getElementById("w3in").value) 
+    weightlinetop=parseFloat(document.getElementById("w4in").value) 
+    weightlinebottom=parseFloat(document.getElementById("w5in").value)
 }
 
 function updateNPK(){
@@ -398,7 +397,7 @@ function playGame(){
     document.getElementById("TCPLAY").hidden = true;
     document.getElementById("TCB").hidden = true;
     document.getElementById("TCL").hidden = true;
-
+    document.getElementById("TCW").hidden = true;
     document.getElementById("lc").hidden = true;
     document.getElementById("minl").hidden = true;
     document.getElementById("maxl").hidden = true;
@@ -724,12 +723,13 @@ function initFig2(){
         play=false;
         document.getElementById("TCPLAY").hidden = false;
         document.getElementById("TCB").hidden = false;
-        document.getElementById("TCL").hidden = false;
+        //document.getElementById("TCL").hidden = false;
         document.getElementById("lc").hidden = false;
         document.getElementById("minl").hidden = false;
         document.getElementById("maxl").hidden = false;
         document.getElementById("ls").hidden = false;
-
+        
+        document.getElementById("TCW").hidden = false;
 
     }else {
 
@@ -936,7 +936,7 @@ TetrisGame2 = setInterval(()=> {
     if(this.falltime/fps >fallspeed) {
         this.falltime = 0
         gravity()
-        console.log(fallspeed)
+        //console.log(fallspeed)
         
     }
     

@@ -354,6 +354,25 @@ border-radius: 10px;
 
   
 }
+.TCW {
+  position: absolute;
+  top: 25%; left: 50%;
+  transform: translate(-50%,-50%);
+  text-decoration: none;
+
+  font-size: 5vh;
+
+  background-color: #aaaaaa00;
+  font-family: 'ethnocentric', serif;
+
+  text-align: center;
+ color: black;
+
+ 
+
+
+  
+}
 .TCLC {
   position: absolute;
   top: 75%; left: 50%;

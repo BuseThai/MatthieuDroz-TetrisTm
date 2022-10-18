@@ -48,8 +48,8 @@
                 <p id="w5" class="w5">weight line clear bottom</p>
                 <input id="w5in" class="w5in" type="number" onchange="updateW();">
 
-                <p id="g" class="g">Generation : 0</p>
-                <input id="gin" class="gin" type="range" min="1" max="100" value="0" class="slider" id="myRange">
+                <p id="g" class="g" hidden="true">Generation : 0</p>
+                <input hidden="true" id="gin" class="gin" type="range" min="1" max="100" value="0" class="slider" id="myRange">
 
                 <p id="sb" class="sb">Speed boost</p>
                 <input id="sbin" class="sbin" type="number" value="1" onchange="updateSpeed();">
@@ -71,6 +71,7 @@
             <canvas id="Tetris1" style="background:rgb(0, 0, 0)"></canvas>
             <div id="TCB" class="TCB"></div>
             <div id="TCL" class="TCL" hidden="true">YOU LOOSE</div>
+            <div id="TCW" class="TCW" hidden="true">YOU WIN</div>
             <p id="ls" class="ls">LEVEL</p>
             <div id="TCLC" class="TCLC" >
 
